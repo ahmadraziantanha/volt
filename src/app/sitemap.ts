@@ -3,7 +3,7 @@ import { ARTICLES } from "@/lib/journal";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const base =
-    process.env.NEXT_PUBLIC_SITE_URL ?? "https://volt-audio.vercel.app";
+    process.env.NEXT_PUBLIC_SITE_URL ?? "https://volt-murex-three.vercel.app";
 
   const staticRoutes: MetadataRoute.Sitemap = [
     { url: `${base}/`, lastModified: new Date(), changeFrequency: "weekly", priority: 1 },
