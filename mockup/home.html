@@ -1,0 +1,1093 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<meta name="theme-color" content="#0A0A0A" />
+<title>VOLT</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --bg: #0A0A0A;
+    --surface: #0E0E0E;
+    --line: #1A1A1A;
+    --line-2: #242424;
+    --text: #FAFAFA;
+    --body: #B8B8B8;
+    --muted: #707070;
+    --quiet: #4A4A4A;
+    --accent: #E4FF1A;
+    --easing: cubic-bezier(0.65, 0, 0.35, 1);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--bg);
+    color: var(--body);
+    font-family: 'Inter Tight', system-ui, sans-serif;
+    font-weight: 400;
+    font-size: 15px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    overflow-x: hidden;
+  }
+  body.lock { overflow: hidden; }
+  a { color: inherit; text-decoration: none; }
+  img { display: block; max-width: 100%; }
+  button { font-family: inherit; cursor: pointer; background: none; border: none; color: inherit; }
+  ::selection { background: var(--accent); color: #000; }
+
+  .mono { font-family: 'JetBrains Mono', monospace; font-feature-settings: "ss01" on, "zero" on; }
+
+  .wrap { padding: 0 32px; }
+  @media (max-width: 768px) { .wrap { padding: 0 20px; } }
+
+  /* ============ ICON ============ */
+  .ico {
+    width: 20px; height: 20px;
+    stroke: currentColor;
+    fill: none;
+    stroke-width: 1.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    display: inline-block;
+    flex-shrink: 0;
+  }
+  .ico-sm { width: 16px; height: 16px; stroke-width: 1.6; }
+  .ico-lg { width: 22px; height: 22px; }
+
+  /* ============ HEADER ============ */
+  header {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    transition: background 0.4s var(--easing), border-color 0.4s var(--easing);
+    border-bottom: 1px solid transparent;
+  }
+  header.scrolled {
+    background: rgba(10,10,10,0.82);
+    backdrop-filter: blur(18px) saturate(160%);
+    -webkit-backdrop-filter: blur(18px) saturate(160%);
+    border-bottom-color: var(--line);
+  }
+  .nav {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    height: 64px;
+  }
+  .wordmark {
+    font-weight: 700;
+    font-size: 15px;
+    color: var(--text);
+    letter-spacing: -0.01em;
+  }
+  .nav-links {
+    display: flex;
+    gap: 36px;
+    list-style: none;
+    justify-self: center;
+  }
+  .nav-links a {
+    font-size: 13.5px;
+    color: var(--body);
+    transition: color 0.2s var(--easing);
+  }
+  .nav-links a:hover { color: var(--text); }
+  .nav-right {
+    display: flex; align-items: center; gap: 8px;
+    justify-self: end;
+  }
+  .icon-btn {
+    width: 40px; height: 40px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text);
+    border-radius: 50%;
+    transition: background 0.2s var(--easing), color 0.2s var(--easing);
+    position: relative;
+  }
+  .icon-btn:hover { background: var(--surface); }
+  .icon-btn .cart-count {
+    position: absolute;
+    top: 4px; right: 4px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    color: #000;
+    background: var(--accent);
+    width: 14px; height: 14px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    line-height: 1;
+    font-weight: 500;
+  }
+  .menu-btn { display: none; }
+  @media (max-width: 900px) {
+    .nav-links { display: none; }
+    .nav { grid-template-columns: 1fr auto; }
+    .menu-btn { display: inline-flex; }
+    .nav-right .desktop-only { display: none; }
+  }
+
+  /* ============ MOBILE MENU ============ */
+  .menu-overlay {
+    position: fixed; inset: 0;
+    z-index: 200;
+    background: var(--bg);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.4s var(--easing);
+    display: flex;
+    flex-direction: column;
+  }
+  .menu-overlay.open { opacity: 1; pointer-events: auto; }
+  .menu-head {
+    display: flex; align-items: center;
+    justify-content: space-between;
+    padding: 12px 20px;
+    height: 64px;
+    border-bottom: 1px solid var(--line);
+  }
+  .menu-head .wordmark { font-size: 15px; }
+  .menu-list {
+    flex: 1;
+    padding: 48px 20px;
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .menu-list li {
+    border-bottom: 1px solid var(--line);
+    transform: translateY(20px);
+    opacity: 0;
+    transition: opacity 0.5s var(--easing), transform 0.5s var(--easing);
+  }
+  .menu-overlay.open .menu-list li {
+    opacity: 1; transform: translateY(0);
+  }
+  .menu-overlay.open .menu-list li:nth-child(1) { transition-delay: 0.08s; }
+  .menu-overlay.open .menu-list li:nth-child(2) { transition-delay: 0.13s; }
+  .menu-overlay.open .menu-list li:nth-child(3) { transition-delay: 0.18s; }
+  .menu-overlay.open .menu-list li:nth-child(4) { transition-delay: 0.23s; }
+  .menu-overlay.open .menu-list li:nth-child(5) { transition-delay: 0.28s; }
+  .menu-list a {
+    display: flex; align-items: baseline; justify-content: space-between;
+    padding: 20px 0;
+    font-size: 34px;
+    font-weight: 500;
+    color: var(--text);
+    letter-spacing: -0.03em;
+  }
+  .menu-list a .num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--quiet);
+    font-weight: 400;
+  }
+  .menu-foot {
+    padding: 32px 20px;
+    border-top: 1px solid var(--line);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .menu-foot .socials { display: flex; gap: 4px; }
+  .menu-foot .meta { font-size: 11px; color: var(--muted); font-family: 'JetBrains Mono', monospace; }
+
+  /* ============ HERO ============ */
+  .hero {
+    position: relative;
+    min-height: 100vh;
+    overflow: hidden;
+    display: flex;
+    align-items: flex-end;
+  }
+  .hero-bg {
+    position: absolute; inset: 0;
+    background-image: url('https://images.unsplash.com/photo-1487215078519-e21cc028cb29?auto=format&fit=crop&w=2400&q=85');
+    background-size: cover;
+    background-position: center;
+    filter: brightness(0.85) contrast(1.05);
+  }
+  .hero-bg::after {
+    content: '';
+    position: absolute; inset: 0;
+    background:
+      linear-gradient(180deg, rgba(10,10,10,0.55) 0%, rgba(10,10,10,0) 30%, rgba(10,10,10,0) 60%, rgba(10,10,10,0.95) 100%),
+      linear-gradient(90deg, rgba(10,10,10,0.4) 0%, rgba(10,10,10,0) 50%);
+  }
+  .hero-inner {
+    position: relative; z-index: 2;
+    width: 100%;
+    padding: 0 32px 56px;
+  }
+  @media (max-width: 768px) { .hero-inner { padding: 0 20px 40px; } }
+
+  .hero-top {
+    position: absolute;
+    top: 96px; right: 32px;
+    text-align: right;
+  }
+  @media (max-width: 768px) { .hero-top { right: 20px; top: 84px; } }
+  .hero-top .row { font-size: 11px; color: var(--muted); letter-spacing: 0.06em; margin-bottom: 4px; }
+  .hero-top .row b { color: var(--text); font-weight: 500; }
+
+  .hero-title {
+    font-size: clamp(56px, 11vw, 168px);
+    font-weight: 600;
+    line-height: 0.92;
+    letter-spacing: -0.055em;
+    color: var(--text);
+    margin-bottom: 40px;
+    max-width: 1100px;
+  }
+  .hero-title .light { font-weight: 300; color: var(--body); }
+
+  .hero-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 40px;
+    flex-wrap: wrap;
+    padding-top: 32px;
+    border-top: 1px solid var(--line-2);
+  }
+  @media (max-width: 600px) {
+    .hero-row { flex-direction: column; align-items: stretch; gap: 28px; }
+  }
+  .hero-row .left { max-width: 380px; }
+  .hero-row .caption { font-size: 11px; color: var(--muted); letter-spacing: 0.04em; margin-bottom: 12px; }
+  .hero-row .desc { font-size: 14px; color: var(--body); line-height: 1.5; }
+  .hero-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 14px;
+    color: var(--text);
+    border-bottom: 1px solid var(--text);
+    padding: 0 0 6px;
+    font-size: 14px;
+    font-weight: 500;
+    transition: color 0.3s var(--easing), border-color 0.3s var(--easing), gap 0.3s var(--easing);
+    align-self: flex-start;
+  }
+  .hero-cta:hover { color: var(--accent); border-bottom-color: var(--accent); gap: 22px; }
+
+  /* ============ SECTION ANATOMY ============ */
+  section { position: relative; }
+  .section-head {
+    display: grid;
+    grid-template-columns: 80px 1fr auto;
+    align-items: end;
+    gap: 32px;
+    padding: 120px 32px 56px;
+    border-bottom: 1px solid var(--line);
+  }
+  @media (max-width: 768px) {
+    .section-head {
+      padding: 72px 20px 32px;
+      grid-template-columns: 1fr;
+      gap: 20px;
+      align-items: start;
+    }
+  }
+  .section-num { font-size: 11px; color: var(--quiet); }
+  .section-title {
+    font-size: clamp(32px, 4.5vw, 56px);
+    font-weight: 500;
+    letter-spacing: -0.04em;
+    line-height: 1;
+    color: var(--text);
+  }
+  .section-title .quiet { color: var(--quiet); }
+  .section-head .right {
+    font-size: 13px;
+    color: var(--body);
+    max-width: 320px;
+    text-align: right;
+    line-height: 1.5;
+  }
+  @media (max-width: 768px) {
+    .section-head .right { text-align: left; max-width: none; }
+  }
+
+  /* ============ CATALOGUE INDEX ============ */
+  .index-row {
+    display: grid;
+    grid-template-columns: 80px 1.2fr 1fr 1fr 120px 100px;
+    align-items: center;
+    padding: 28px 32px;
+    border-bottom: 1px solid var(--line);
+    cursor: pointer;
+    transition: background 0.3s var(--easing), padding 0.3s var(--easing);
+    position: relative;
+  }
+  .index-row:hover {
+    background: var(--surface);
+    padding-left: 44px;
+  }
+  .index-row .col-thumb { display: none; }
+
+  @media (max-width: 900px) {
+    .index-row {
+      grid-template-columns: 72px 1fr auto;
+      gap: 16px;
+      padding: 16px 20px;
+    }
+    .index-row:hover { padding-left: 20px; }
+    .index-row .col-num,
+    .index-row .col-cat,
+    .index-row .col-year,
+    .index-row .col-status { display: none; }
+    .index-row .col-thumb {
+      display: block;
+      width: 72px; height: 72px;
+      background: #050505;
+      overflow: hidden;
+    }
+    .index-row .col-thumb img { width: 100%; height: 100%; object-fit: cover; }
+    .index-row .col-name { font-size: 18px; }
+    .index-row .col-name .sub {
+      display: block;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      color: var(--muted);
+      font-weight: 400;
+      letter-spacing: 0.06em;
+      margin-top: 4px;
+    }
+  }
+
+  .index-row .col-num { font-size: 11px; color: var(--quiet); }
+  .index-row .col-name {
+    font-size: 22px;
+    font-weight: 500;
+    color: var(--text);
+    letter-spacing: -0.02em;
+    transition: color 0.3s var(--easing);
+  }
+  .index-row .col-name .sub { display: none; }
+  .index-row:hover .col-name { color: var(--accent); }
+  .index-row .col-cat,
+  .index-row .col-year,
+  .index-row .col-status { font-size: 13px; color: var(--muted); }
+  .index-row .col-status .dot {
+    display: inline-block;
+    width: 5px; height: 5px;
+    border-radius: 50%;
+    background: var(--muted);
+    margin-right: 8px;
+    vertical-align: middle;
+  }
+  .index-row.in-stock .col-status .dot { background: #6ABF4B; }
+  .index-row.low-stock .col-status .dot { background: #D4A24C; }
+  .index-row .col-price {
+    font-size: 16px;
+    color: var(--text);
+    text-align: right;
+    font-weight: 500;
+  }
+
+  .index-preview {
+    position: fixed;
+    pointer-events: none;
+    width: 280px; height: 340px;
+    opacity: 0;
+    transform: translate(20px, -50%) scale(0.96);
+    transition: opacity 0.25s var(--easing), transform 0.4s var(--easing);
+    z-index: 5;
+    background: var(--surface);
+    border: 1px solid var(--line-2);
+    overflow: hidden;
+  }
+  .index-preview.visible { opacity: 1; transform: translate(20px, -50%) scale(1); }
+  .index-preview img { width: 100%; height: 100%; object-fit: cover; }
+  @media (max-width: 900px) { .index-preview { display: none; } }
+
+  /* ============ FEATURE ============ */
+  .feature {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    border-bottom: 1px solid var(--line);
+  }
+  @media (max-width: 900px) { .feature { grid-template-columns: 1fr; } }
+  .feature-media {
+    aspect-ratio: 4 / 5;
+    background: #050505;
+    overflow: hidden;
+    border-right: 1px solid var(--line);
+    position: relative;
+  }
+  @media (max-width: 900px) {
+    .feature-media { border-right: none; border-bottom: 1px solid var(--line); aspect-ratio: 4 / 3; }
+  }
+  .feature-media img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    transition: transform 1.2s var(--easing);
+  }
+  .feature:hover .feature-media img { transform: scale(1.03); }
+  .feature-media .corner {
+    position: absolute; top: 24px; left: 24px;
+    font-size: 11px; color: var(--text);
+  }
+  .feature-media .corner-r {
+    position: absolute; top: 24px; right: 24px;
+    font-size: 11px; color: var(--text);
+    text-align: right;
+  }
+
+  .feature-body {
+    padding: 80px 64px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 56px;
+  }
+  @media (max-width: 768px) { .feature-body { padding: 48px 20px; gap: 36px; } }
+  .feature-body .eyebrow {
+    font-size: 11px; color: var(--muted); margin-bottom: 32px;
+  }
+  .feature-body h3 {
+    font-size: clamp(40px, 5vw, 72px);
+    font-weight: 500;
+    letter-spacing: -0.045em;
+    line-height: 1;
+    color: var(--text);
+    margin-bottom: 24px;
+  }
+  .feature-body .lede {
+    font-size: 16px;
+    color: var(--body);
+    line-height: 1.55;
+    max-width: 440px;
+  }
+  .spec-table { width: 100%; }
+  .spec-row {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    padding: 16px 0;
+    border-top: 1px solid var(--line);
+    align-items: baseline;
+    gap: 16px;
+  }
+  .spec-row:last-child { border-bottom: 1px solid var(--line); }
+  .spec-row .k { font-size: 12px; color: var(--muted); }
+  .spec-row .v { font-size: 14px; color: var(--text); text-align: right; }
+
+  .feature-foot {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 24px;
+    flex-wrap: wrap;
+  }
+  .feature-foot .price { font-size: 14px; color: var(--muted); }
+  .feature-foot .price b {
+    display: block;
+    color: var(--text);
+    font-size: 28px;
+    font-weight: 500;
+    letter-spacing: -0.02em;
+    margin-top: 4px;
+  }
+  .btn-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    color: var(--text);
+    border-bottom: 1px solid var(--text);
+    padding-bottom: 4px;
+    font-size: 14px;
+    font-weight: 500;
+    transition: gap 0.3s var(--easing), color 0.3s var(--easing), border-color 0.3s var(--easing);
+  }
+  .btn-link:hover { gap: 20px; color: var(--accent); border-bottom-color: var(--accent); }
+
+  /* ============ ENGINEERING ============ */
+  .engineering {
+    padding: 120px 32px 140px;
+    border-bottom: 1px solid var(--line);
+  }
+  @media (max-width: 768px) { .engineering { padding: 64px 20px 80px; } }
+  .engineering .section-head { padding: 0 0 56px; border-bottom: none; }
+  @media (max-width: 768px) { .engineering .section-head { padding: 0 0 40px; } }
+
+  .eng-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0;
+  }
+  @media (max-width: 768px) { .eng-grid { grid-template-columns: 1fr; } }
+  .eng-cell {
+    padding: 40px 32px 40px 0;
+    border-right: 1px solid var(--line);
+  }
+  .eng-cell:last-child { border-right: none; padding-right: 0; }
+  @media (max-width: 768px) {
+    .eng-cell { border-right: none; border-bottom: 1px solid var(--line); padding: 32px 0; }
+    .eng-cell:last-child { border-bottom: none; padding-bottom: 0; }
+    .eng-cell:first-child { padding-top: 0; }
+  }
+  .eng-num {
+    font-size: clamp(72px, 11vw, 160px);
+    font-weight: 400;
+    letter-spacing: -0.06em;
+    line-height: 0.9;
+    color: var(--text);
+    margin-bottom: 24px;
+  }
+  .eng-num sup {
+    font-size: 0.32em;
+    font-weight: 500;
+    vertical-align: top;
+    margin-left: 4px;
+    letter-spacing: 0;
+    color: var(--muted);
+  }
+  .eng-label { font-size: 11px; color: var(--muted); margin-bottom: 8px; }
+  .eng-body { font-size: 14px; color: var(--body); line-height: 1.5; max-width: 280px; }
+
+  /* ============ MANIFESTO ============ */
+  .manifesto {
+    padding: 180px 32px;
+    border-bottom: 1px solid var(--line);
+  }
+  @media (max-width: 768px) { .manifesto { padding: 96px 20px; } }
+  .manifesto-inner {
+    display: grid;
+    grid-template-columns: 80px 1fr;
+    gap: 32px;
+  }
+  @media (max-width: 768px) { .manifesto-inner { grid-template-columns: 1fr; gap: 24px; } }
+  .manifesto .num { font-size: 11px; color: var(--quiet); }
+  .manifesto p {
+    font-size: clamp(26px, 3.8vw, 48px);
+    line-height: 1.18;
+    font-weight: 400;
+    letter-spacing: -0.025em;
+    color: var(--text);
+    max-width: 1000px;
+  }
+  .manifesto p .secondary { color: var(--quiet); }
+  .manifesto-foot {
+    margin-top: 56px;
+    display: flex;
+    gap: 56px;
+    flex-wrap: wrap;
+    font-size: 12px;
+    color: var(--muted);
+  }
+  @media (max-width: 768px) { .manifesto-foot { gap: 32px; margin-top: 40px; } }
+  .manifesto-foot div b { display: block; color: var(--text); font-weight: 500; margin-bottom: 4px; }
+
+  /* ============ PRESS ============ */
+  .press {
+    padding: 80px 32px;
+    border-bottom: 1px solid var(--line);
+  }
+  @media (max-width: 768px) { .press { padding: 56px 20px; } }
+  .press-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 24px;
+    margin-bottom: 48px;
+  }
+  .press-head .label { font-size: 11px; color: var(--muted); }
+  .press-head .meta { font-size: 11px; color: var(--quiet); }
+  .press-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 32px;
+    align-items: center;
+  }
+  @media (max-width: 768px) {
+    .press-grid { grid-template-columns: repeat(2, 1fr); gap: 24px 20px; }
+  }
+  .press-item {
+    font-size: clamp(18px, 2vw, 22px);
+    color: var(--quiet);
+    font-weight: 400;
+    letter-spacing: -0.02em;
+    transition: color 0.3s var(--easing);
+  }
+  .press-item:hover { color: var(--body); }
+
+  /* ============ FOOTER ============ */
+  footer { padding: 96px 32px 40px; }
+  @media (max-width: 768px) { footer { padding: 56px 20px 32px; } }
+  .footer-top {
+    display: grid;
+    grid-template-columns: 1.5fr 1fr 1fr 1fr;
+    gap: 48px;
+    padding-bottom: 96px;
+    border-bottom: 1px solid var(--line);
+  }
+  @media (max-width: 900px) { .footer-top { grid-template-columns: 1fr 1fr; gap: 40px; padding-bottom: 56px; } }
+  @media (max-width: 480px) { .footer-top { grid-template-columns: 1fr; gap: 40px; } }
+
+  .footer-brand-col { grid-column: span 1; }
+  @media (max-width: 900px) { .footer-brand-col { grid-column: span 2; } }
+  @media (max-width: 480px) { .footer-brand-col { grid-column: span 1; } }
+
+  .footer-mark {
+    font-size: clamp(56px, 12vw, 132px);
+    font-weight: 500;
+    color: var(--text);
+    letter-spacing: -0.06em;
+    line-height: 0.85;
+    margin-bottom: 32px;
+  }
+  .footer-meta { font-size: 12px; color: var(--muted); max-width: 300px; line-height: 1.6; }
+  .footer-news {
+    margin-top: 32px;
+    border-bottom: 1px solid var(--line-2);
+    display: flex;
+    align-items: center;
+    padding-bottom: 12px;
+    max-width: 360px;
+  }
+  .footer-news input {
+    flex: 1; background: transparent; border: none; color: var(--text);
+    font: inherit; font-size: 13px; outline: none;
+  }
+  .footer-news input::placeholder { color: var(--quiet); }
+  .footer-news button {
+    color: var(--text); font: inherit; font-size: 13px; padding: 0;
+    display: inline-flex; align-items: center; gap: 8px;
+  }
+  .footer-news button:hover { color: var(--accent); }
+
+  .footer-col h6 {
+    font-size: 11px;
+    color: var(--quiet);
+    font-weight: 400;
+    margin-bottom: 24px;
+  }
+  .footer-col ul { list-style: none; }
+  .footer-col li { margin-bottom: 12px; }
+  .footer-col a {
+    font-size: 13px;
+    color: var(--body);
+    transition: color 0.2s var(--easing);
+  }
+  .footer-col a:hover { color: var(--text); }
+
+  .footer-bot {
+    padding-top: 40px;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 24px;
+    align-items: center;
+    font-size: 11px;
+    color: var(--muted);
+  }
+  .footer-bot .center { text-align: center; }
+  .footer-bot .right { display: flex; justify-content: flex-end; gap: 4px; }
+  @media (max-width: 768px) {
+    .footer-bot { grid-template-columns: 1fr; gap: 20px; text-align: left; }
+    .footer-bot .center { text-align: left; }
+    .footer-bot .right { justify-content: flex-start; }
+  }
+  .socials { display: flex; gap: 4px; }
+  .social-btn {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    display: inline-flex; align-items: center; justify-content: center;
+    color: var(--muted);
+    transition: color 0.2s var(--easing), background 0.2s var(--easing);
+  }
+  .social-btn:hover { color: var(--text); background: var(--surface); }
+</style>
+</head>
+<body>
+
+<!-- ========= ICON DEFINITIONS ========= -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></symbol>
+    <symbol id="i-bag" viewBox="0 0 24 24"><path d="M6 7h12l-1 13H7L6 7z"/><path d="M9 7V5a3 3 0 016 0v2"/></symbol>
+    <symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 8h16M4 16h16"/></symbol>
+    <symbol id="i-close" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></symbol>
+    <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></symbol>
+    <symbol id="i-instagram" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="0.8" fill="currentColor" stroke="none"/></symbol>
+    <symbol id="i-youtube" viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="12" rx="3"/><path d="M11 9.5l4 2.5-4 2.5v-5z" fill="currentColor" stroke="none"/></symbol>
+    <symbol id="i-arena" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 3v18M3 12h18"/></symbol>
+    <symbol id="i-tiktok" viewBox="0 0 24 24"><path d="M14 4v9.5a3.5 3.5 0 11-3.5-3.5"/><path d="M14 4c.5 2 2 3.5 4.5 3.5"/></symbol>
+  </defs>
+</svg>
+
+<header id="hdr">
+  <div class="wrap">
+    <div class="nav">
+      <a href="#" class="wordmark">VOLT</a>
+      <ul class="nav-links">
+        <li><a href="#">Shop</a></li>
+        <li><a href="#">Headphones</a></li>
+        <li><a href="#">Earbuds</a></li>
+        <li><a href="#">Speakers</a></li>
+        <li><a href="#">Journal</a></li>
+      </ul>
+      <div class="nav-right">
+        <button class="icon-btn desktop-only" aria-label="Search">
+          <svg class="ico"><use href="#i-search"/></svg>
+        </button>
+        <button class="icon-btn" aria-label="Cart">
+          <svg class="ico"><use href="#i-bag"/></svg>
+          <span class="cart-count">2</span>
+        </button>
+        <button class="icon-btn menu-btn" id="menuOpen" aria-label="Menu">
+          <svg class="ico"><use href="#i-menu"/></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- ========= MOBILE MENU OVERLAY ========= -->
+<div class="menu-overlay" id="menu">
+  <div class="menu-head">
+    <a href="#" class="wordmark">VOLT</a>
+    <button class="icon-btn" id="menuClose" aria-label="Close menu">
+      <svg class="ico"><use href="#i-close"/></svg>
+    </button>
+  </div>
+
+  <ul class="menu-list">
+    <li><a href="#">Shop <span class="num">01</span></a></li>
+    <li><a href="#">Headphones <span class="num">02</span></a></li>
+    <li><a href="#">Earbuds <span class="num">03</span></a></li>
+    <li><a href="#">Speakers <span class="num">04</span></a></li>
+    <li><a href="#">Journal <span class="num">05</span></a></li>
+  </ul>
+
+  <div class="menu-foot">
+    <div class="socials">
+      <a href="#" class="social-btn" aria-label="Instagram"><svg class="ico"><use href="#i-instagram"/></svg></a>
+      <a href="#" class="social-btn" aria-label="YouTube"><svg class="ico"><use href="#i-youtube"/></svg></a>
+      <a href="#" class="social-btn" aria-label="TikTok"><svg class="ico"><use href="#i-tiktok"/></svg></a>
+    </div>
+    <div class="meta">PORTO &nbsp;·&nbsp; MMXXVI</div>
+  </div>
+</div>
+
+<!-- ===== HERO ===== -->
+<section class="hero">
+  <div class="hero-bg"></div>
+
+  <div class="hero-top">
+    <div class="row mono"><b>FIELD&nbsp;PRO</b></div>
+    <div class="row mono">MMXXVI&nbsp;·&nbsp;ED.&nbsp;004</div>
+  </div>
+
+  <div class="hero-inner">
+    <h1 class="hero-title">
+      Reference,<br/>
+      <span class="light">untethered.</span>
+    </h1>
+
+    <div class="hero-row">
+      <div class="left">
+        <div class="caption mono">A&nbsp;/&nbsp;NEW&nbsp;FLAGSHIP</div>
+        <p class="desc">Fifty hours of mastering-grade playback. Forty-millimeter dynamic drivers tuned in our Porto room. Six microphones for ANC that listens before it cancels.</p>
+      </div>
+
+      <button class="hero-cta">
+        Shop Field Pro
+        <svg class="ico ico-sm"><use href="#i-arrow"/></svg>
+      </button>
+    </div>
+  </div>
+</section>
+
+<!-- ===== CATALOGUE INDEX ===== -->
+<section>
+  <div class="section-head">
+    <div class="section-num mono">01 / IX</div>
+    <h2 class="section-title">Catalogue, <span class="quiet">2026.</span></h2>
+    <div class="right">Seven instruments. Available in Carbon and selected limited finishes. Shipped from Porto, Mon–Fri.</div>
+  </div>
+
+  <div class="index" id="index">
+    <a class="index-row in-stock" href="#"
+       data-img="https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=900&q=85">
+      <div class="col-thumb"><img src="https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=200&q=80" alt="" loading="lazy"/></div>
+      <div class="col-num mono">01</div>
+      <div class="col-name">Field<span class="sub mono">VOL-001 · OVER-EAR</span></div>
+      <div class="col-cat mono">OVER-EAR / ANC</div>
+      <div class="col-year mono">VOL-001</div>
+      <div class="col-status mono"><span class="dot"></span>IN STOCK</div>
+      <div class="col-price">$349</div>
+    </a>
+    <a class="index-row in-stock" href="#"
+       data-img="https://images.unsplash.com/photo-1545127398-14699f92334b?auto=format&fit=crop&w=900&q=85">
+      <div class="col-thumb"><img src="https://images.unsplash.com/photo-1545127398-14699f92334b?auto=format&fit=crop&w=200&q=80" alt="" loading="lazy"/></div>
+      <div class="col-num mono">02</div>
+      <div class="col-name">Field Pro<span class="sub mono">VOL-002 · FLAGSHIP</span></div>
+      <div class="col-cat mono">OVER-EAR / FLAGSHIP</div>
+      <div class="col-year mono">VOL-002</div>
+      <div class="col-status mono"><span class="dot"></span>IN STOCK</div>
+      <div class="col-price">$549</div>
+    </a>
+    <a class="index-row in-stock" href="#"
+       data-img="https://images.unsplash.com/photo-1606220588913-b3aacb4d2f46?auto=format&fit=crop&w=900&q=85">
+      <div class="col-thumb"><img src="https://images.unsplash.com/photo-1606220588913-b3aacb4d2f46?auto=format&fit=crop&w=200&q=80" alt="" loading="lazy"/></div>
+      <div class="col-num mono">03</div>
+      <div class="col-name">Pulse<span class="sub mono">VOL-003 · IN-EAR</span></div>
+      <div class="col-cat mono">IN-EAR / ANC</div>
+      <div class="col-year mono">VOL-003</div>
+      <div class="col-status mono"><span class="dot"></span>IN STOCK</div>
+      <div class="col-price">$229</div>
+    </a>
+    <a class="index-row low-stock" href="#"
+       data-img="https://images.unsplash.com/photo-1608043152269-423dbba4e7e1?auto=format&fit=crop&w=900&q=85">
+      <div class="col-thumb"><img src="https://images.unsplash.com/photo-1608043152269-423dbba4e7e1?auto=format&fit=crop&w=200&q=80" alt="" loading="lazy"/></div>
+      <div class="col-num mono">04</div>
+      <div class="col-name">Pulse Sport<span class="sub mono">VOL-004 · LOW STOCK</span></div>
+      <div class="col-cat mono">IN-EAR / TRAINING</div>
+      <div class="col-year mono">VOL-004</div>
+      <div class="col-status mono"><span class="dot"></span>LOW STOCK</div>
+      <div class="col-price">$179</div>
+    </a>
+    <a class="index-row in-stock" href="#"
+       data-img="https://images.unsplash.com/photo-1545454675-3531b543be5d?auto=format&fit=crop&w=900&q=85">
+      <div class="col-thumb"><img src="https://images.unsplash.com/photo-1545454675-3531b543be5d?auto=format&fit=crop&w=200&q=80" alt="" loading="lazy"/></div>
+      <div class="col-num mono">05</div>
+      <div class="col-name">Atlas<span class="sub mono">VOL-005 · SPEAKER</span></div>
+      <div class="col-cat mono">SPEAKER / PORTABLE</div>
+      <div class="col-year mono">VOL-005</div>
+      <div class="col-status mono"><span class="dot"></span>IN STOCK</div>
+      <div class="col-price">$299</div>
+    </a>
+    <a class="index-row in-stock" href="#"
+       data-img="https://images.unsplash.com/photo-1612444530582-fc66183b16f7?auto=format&fit=crop&w=900&q=85">
+      <div class="col-thumb"><img src="https://images.unsplash.com/photo-1612444530582-fc66183b16f7?auto=format&fit=crop&w=200&q=80" alt="" loading="lazy"/></div>
+      <div class="col-num mono">06</div>
+      <div class="col-name">Atlas Mini<span class="sub mono">VOL-006 · POCKET</span></div>
+      <div class="col-cat mono">SPEAKER / POCKET</div>
+      <div class="col-year mono">VOL-006</div>
+      <div class="col-status mono"><span class="dot"></span>IN STOCK</div>
+      <div class="col-price">$149</div>
+    </a>
+    <a class="index-row low-stock" href="#"
+       data-img="https://images.unsplash.com/photo-1593697972646-2f348871bd56?auto=format&fit=crop&w=900&q=85">
+      <div class="col-thumb"><img src="https://images.unsplash.com/photo-1593697972646-2f348871bd56?auto=format&fit=crop&w=200&q=80" alt="" loading="lazy"/></div>
+      <div class="col-num mono">07</div>
+      <div class="col-name">Tower<span class="sub mono">VOL-007 · LOW STOCK</span></div>
+      <div class="col-cat mono">SPEAKER / HOME</div>
+      <div class="col-year mono">VOL-007</div>
+      <div class="col-status mono"><span class="dot"></span>LOW STOCK</div>
+      <div class="col-price">$799</div>
+    </a>
+  </div>
+
+  <div class="index-preview" id="preview"><img id="preview-img" src="" alt="" /></div>
+</section>
+
+<!-- ===== FEATURE ===== -->
+<section>
+  <div class="section-head">
+    <div class="section-num mono">02 / IX</div>
+    <h2 class="section-title">Latest <span class="quiet">edition.</span></h2>
+    <div class="right">Five years of revision. The Field Pro replaces nothing — it sets the upper bound.</div>
+  </div>
+
+  <article class="feature">
+    <div class="feature-media">
+      <span class="corner mono">VOL-002 / PRO</span>
+      <span class="corner-r mono">MMXXVI</span>
+      <img src="https://images.unsplash.com/photo-1545127398-14699f92334b?auto=format&fit=crop&w=1600&q=85" alt="Field Pro" loading="lazy"/>
+    </div>
+    <div class="feature-body">
+      <div>
+        <div class="eyebrow mono">FIELD PRO &nbsp;·&nbsp; REFERENCE</div>
+        <h3>Field Pro.</h3>
+        <p class="lede">A reference monitor in a wireless body. Hybrid driver array, hi-res certification, fifty hours per charge. Leather earcups, machined aluminum yokes, and a silicone-suspended chassis that disappears on the head.</p>
+      </div>
+
+      <div class="spec-table">
+        <div class="spec-row"><div class="k">Drivers</div><div class="v">40 mm dynamic + 10 mm planar</div></div>
+        <div class="spec-row"><div class="k">Response</div><div class="v">4 Hz – 40 kHz</div></div>
+        <div class="spec-row"><div class="k">Battery</div><div class="v">50 h / 60 min charge</div></div>
+        <div class="spec-row"><div class="k">Wireless</div><div class="v">BT 5.3, LDAC, aptX Adaptive</div></div>
+        <div class="spec-row"><div class="k">Weight</div><div class="v">268 g</div></div>
+      </div>
+
+      <div class="feature-foot">
+        <div class="price">From<b>$549</b></div>
+        <button class="btn-link">
+          Configure
+          <svg class="ico ico-sm"><use href="#i-arrow"/></svg>
+        </button>
+      </div>
+    </div>
+  </article>
+</section>
+
+<!-- ===== ENGINEERING ===== -->
+<section class="engineering">
+  <div class="section-head">
+    <div class="section-num mono">03 / IX</div>
+    <h2 class="section-title">Engineering, <span class="quiet">not feature lists.</span></h2>
+    <div class="right">Every measurement comes from third-party labs. We publish them in full on each product page.</div>
+  </div>
+
+  <div class="eng-grid">
+    <div class="eng-cell">
+      <div class="eng-num">4<sup>Hz</sup></div>
+      <div class="eng-label mono">FREQUENCY FLOOR</div>
+      <p class="eng-body">Sub-bass extension below the threshold of hearing. You feel it before you hear it.</p>
+    </div>
+    <div class="eng-cell">
+      <div class="eng-num">−32<sup>dB</sup></div>
+      <div class="eng-label mono">ADAPTIVE ANC</div>
+      <p class="eng-body">Six microphones, 48 kHz sampling. The cabin profiles your environment 200 times per second.</p>
+    </div>
+    <div class="eng-cell">
+      <div class="eng-num">50<sup>h</sup></div>
+      <div class="eng-label mono">CONTINUOUS PLAYBACK</div>
+      <p class="eng-body">USB-C fast charge restores ten hours of playback in fifteen minutes. Tested at full volume.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ===== MANIFESTO ===== -->
+<section class="manifesto">
+  <div class="manifesto-inner">
+    <div class="num mono">04 / IX</div>
+    <div>
+      <p>
+        We build audio for people who&nbsp;listen.
+        <span class="secondary">No gimmicks, no theatre, no compromise — just the recording, the way it was&nbsp;mixed.</span>
+      </p>
+      <div class="manifesto-foot mono">
+        <div><b>Founded</b>Porto, MMXXIII</div>
+        <div><b>Workshop</b>Rua das Flores, 2700–248</div>
+        <div><b>Team</b>11 engineers</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== PRESS ===== -->
+<section class="press">
+  <div class="press-head">
+    <div class="label mono">PRESS &nbsp;/&nbsp; SELECTED</div>
+    <div class="meta mono">2024 — 2026</div>
+  </div>
+  <div class="press-grid">
+    <div class="press-item">Wired</div>
+    <div class="press-item">The&nbsp;Verge</div>
+    <div class="press-item">Engadget</div>
+    <div class="press-item">Hi-Fi&nbsp;News</div>
+    <div class="press-item">Pitchfork</div>
+  </div>
+</section>
+
+<!-- ===== FOOTER ===== -->
+<footer>
+  <div class="footer-top">
+    <div class="footer-brand-col">
+      <div class="footer-mark">VOLT</div>
+      <p class="footer-meta">Audio instruments designed and assembled in Porto, Portugal. Shipped worldwide since 2023. We do not run sales.</p>
+
+      <form class="footer-news" onsubmit="return false">
+        <input type="email" placeholder="Email for new editions" />
+        <button type="submit" aria-label="Subscribe">
+          <svg class="ico ico-sm"><use href="#i-arrow"/></svg>
+        </button>
+      </form>
+    </div>
+
+    <div class="footer-col">
+      <h6 class="mono">SHOP</h6>
+      <ul>
+        <li><a href="#">All editions</a></li>
+        <li><a href="#">Headphones</a></li>
+        <li><a href="#">Earbuds</a></li>
+        <li><a href="#">Speakers</a></li>
+        <li><a href="#">Cables &amp; care</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h6 class="mono">SUPPORT</h6>
+      <ul>
+        <li><a href="#">Contact</a></li>
+        <li><a href="#">Shipping &amp; returns</a></li>
+        <li><a href="#">Warranty</a></li>
+        <li><a href="#">Repair programme</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h6 class="mono">STUDIO</h6>
+      <ul>
+        <li><a href="#">About</a></li>
+        <li><a href="#">Journal</a></li>
+        <li><a href="#">Sustainability</a></li>
+        <li><a href="#">Press kit</a></li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="footer-bot mono">
+    <div>© MMXXVI VOLT STUDIO, LDA.</div>
+    <div class="center">Rua das Flores 22, 2700–248 Porto</div>
+    <div class="right socials">
+      <a href="#" class="social-btn" aria-label="Instagram"><svg class="ico ico-sm"><use href="#i-instagram"/></svg></a>
+      <a href="#" class="social-btn" aria-label="YouTube"><svg class="ico ico-sm"><use href="#i-youtube"/></svg></a>
+      <a href="#" class="social-btn" aria-label="Are.na"><svg class="ico ico-sm"><use href="#i-arena"/></svg></a>
+      <a href="#" class="social-btn" aria-label="TikTok"><svg class="ico ico-sm"><use href="#i-tiktok"/></svg></a>
+    </div>
+  </div>
+</footer>
+
+<script>
+  const hdr = document.getElementById('hdr');
+  const onScroll = () => {
+    if (window.scrollY > 20) hdr.classList.add('scrolled');
+    else hdr.classList.remove('scrolled');
+  };
+  window.addEventListener('scroll', onScroll, { passive: true });
+  onScroll();
+
+  // Mobile menu
+  const menu = document.getElementById('menu');
+  const menuOpen = document.getElementById('menuOpen');
+  const menuClose = document.getElementById('menuClose');
+  const openMenu = () => { menu.classList.add('open'); document.body.classList.add('lock'); };
+  const closeMenu = () => { menu.classList.remove('open'); document.body.classList.remove('lock'); };
+  menuOpen.addEventListener('click', openMenu);
+  menuClose.addEventListener('click', closeMenu);
+  menu.querySelectorAll('a').forEach(a => a.addEventListener('click', closeMenu));
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeMenu(); });
+
+  // Index hover preview (desktop only)
+  const preview = document.getElementById('preview');
+  const previewImg = document.getElementById('preview-img');
+  const rows = document.querySelectorAll('.index-row');
+  const isCoarse = window.matchMedia('(pointer: coarse)').matches;
+
+  if (!isCoarse) {
+    rows.forEach((row) => {
+      row.addEventListener('mouseenter', () => {
+        const src = row.dataset.img;
+        if (!src) return;
+        previewImg.src = src;
+        preview.classList.add('visible');
+      });
+      row.addEventListener('mouseleave', () => {
+        preview.classList.remove('visible');
+      });
+      row.addEventListener('mousemove', (e) => {
+        preview.style.left = e.clientX + 'px';
+        preview.style.top = e.clientY + 'px';
+      });
+    });
+  }
+</script>
+
+</body>
+</html>
